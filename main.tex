@@ -1,0 +1,77 @@
+% !TeX program = xelatex
+\documentclass[UTF8, zihao=-4, oneside]{ctexrep} % 推荐这种，全局设置正文为小四号字
+
+% ====== 常用宏包 ======
+\usepackage[demo]{graphicx}   % 插图
+\usepackage{booktabs}    % 三线表
+\usepackage{amsmath,amssymb} % 数学公式
+\usepackage{geometry}    % 页边距
+\usepackage{hyperref}    % 超链接（目录可点击）
+\usepackage{cleveref}    % 智能交叉引用（可选）
+\usepackage{bm}          % 粗体数学符号
+\usepackage{mathtools}   % amsmath 增强版
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{multirow}
+\usepackage[table]{xcolor}
+
+
+% ====== 页面设置（你后面可按学校要求改）======
+\geometry{a4paper,left=3cm,right=2.5cm,top=2.8cm,bottom=2.8cm}
+
+% ====== 超链接样式（不想要彩色可改）======
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  citecolor=blue
+}
+
+% ====== 论文信息 ======
+\title{基于改进3DGS的虚实融合场景重建与应用研究}
+\author{王伊硕}
+\date{2026年1月}
+
+% ====== 公式编号：显示为（公式3.1）=====
+\numberwithin{equation}{chapter} % 保持 3.1, 3.2 逻辑
+
+% 定义华师专属公式标签格式：[字体类型]{左括号内容}{右括号内容}
+\newtagform{ccnustyle}[\text]{（公式}{）}
+
+% 启用这个格式
+\usetagform{ccnustyle}
+
+% 智能引用设置（配合 cleveref 使用，正文写 \cref 自动补“公式”二字）
+\crefname{equation}{公式}{公式}
+
+
+
+\begin{document}
+
+% ====== 封面 ======
+\maketitle
+
+% ====== 前置部分 ======
+\pagenumbering{roman}
+\tableofcontents
+%\listoffigures
+%\listoftables
+
+% ====== 正文部分 ======
+\clearpage
+\pagenumbering{arabic}
+
+\include{chapters/chap1}
+\include{chapters/chap2}
+\include{chapters/chap3}
+\include{chapters/chap4}
+\include{chapters/chap5}
+\include{chapters/chap6}
+
+
+% ====== 参考文献（你后面再补也行）======
+% 如果你暂时不想弄参考文献，把下面两行先注释掉即可
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\end{document}
