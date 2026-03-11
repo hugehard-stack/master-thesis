@@ -1,0 +1,83 @@
+# =========================
+# LaTeX intermediate files
+# =========================
+*.aux
+*.bcf
+*.blg
+*.bbl
+*.brf
+*.fdb_latexmk
+*.fls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.xdv
+*.nav
+*.snm
+*.vrb
+*.dvi
+*.ps
+*.thm
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.ist
+*.maf
+*.mtc
+*.mtc0
+*.pyg
+*.loa
+*.lol
+*.backup
+*.sav
+
+# =========================
+# Temp / build directories
+# =========================
+_latexmk/
+build/
+out/
+dist/
+*.tmp
+*.temp
+
+# =========================
+# Ignore compiled thesis PDF only
+# =========================
+main.pdf
+
+# =========================
+# Editor / OS files
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.bak
+*.swp
+*.swo
+*~
+
+# =========================
+# VS Code
+# =========================
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# =========================
+# Other IDEs
+# =========================
+.idea/
+*.iml
