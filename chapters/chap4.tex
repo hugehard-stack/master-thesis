@@ -29,7 +29,7 @@
     % 使用 \framebox 占位以避免编译报错。
     % 准备好图片后，请删除下方 \framebox 这一行，并取消下一行 \includegraphics 的注释，修改正确的文件名。
     \framebox[\textwidth]{\rule{0pt}{150pt} 图 4-1：典型密集型孪生场景下的端侧应用痛点示意图 (占位，待替换)}
-    % \includegraphics[width=0.85\textwidth]{figures/chapter4/edge_deployment_bottleneck.png}
+    % \includegraphics[width=0.85\textwidth]{figures/chap4/edge_deployment_bottleneck.png}
     \caption{典型孪生场景端侧部署痛点：高维数据体量与设备受限算力、带宽之间的矛盾}
     \label{fig:edge_deployment_bottleneck}
 \end{figure}
@@ -183,7 +183,13 @@ $$\mathcal{I}_i = \lambda_1 \cdot \overline{\omega}_i + \lambda_2 \cdot \sigma(\
     \label{fig:pruning_comparison}
 \end{figure}
 
-如图 \ref{fig:pruning_comparison} 的实验结果所示，经过微调恢复后，保留下来的核心高斯球能够通过自适应调整自身的颜色和不透明度，完美地填补被剔除高斯球留下的微小视觉空缺。整体而言，该基于重要性评估的剔除策略，能够在保证机房场景高反光质感与几何锐度（PSNR 和 SSIM 指标几乎无降级）的苛刻前提下，稳定剔除 40\% 到 55\% 的冗余点云数据。这不仅从根源上缩减了模型体积，更为第 4.3 节所述的面向保留核心点云的高维属性量化压缩，提供了一个极其干净、紧凑的数据底座。
+如图 \ref{fig:pruning_comparison} 的实验结果所示，经过微调恢复后，
+保留下来的核心高斯球能够通过自适应调整自身的颜色和不透明度，
+完美地填补被剔除高斯球留下的微小视觉空缺。
+整体而言，该基于重要性评估的剔除策略，
+能够在保证机房场景高反光质感与几何锐度（PSNR 和 SSIM 指标几乎无降级）的苛刻前提下，稳定剔除 40\% 到 55\% 的冗余点云数据。
+这不仅从根源上缩减了模型体积，
+更为第 4.3 节所述的面向保留核心点云的高维属性量化压缩，提供了一个极其干净、紧凑的数据底座。
 
 \section{面向高维属性的高斯量化压缩算法}
 \label{sec:attribute_quantization}
@@ -212,11 +218,10 @@ $$\mathcal{I}_i = \lambda_1 \cdot \overline{\omega}_i + \lambda_2 \cdot \sigma(\
 为了拟合复杂的高频光场反射，原始模型通常默认采用三阶（Degree $D=3$）的 SH 系数。对于 RGB 三个颜色通道，三阶 SH 系数的总维度为 $3 \times (D+1)^2 = 48$ 维。
 因此，单高斯球的 SH 系数将占用惊人的 $48 \times 4 = 192$ Bytes。
 
-
+%图 4-4：标准 3DGS 单一高斯球内存占用占比饼图
 \begin{figure}[htbp]
     \centering
-    \framebox[\textwidth]{\rule{0pt}{150pt} 图 4-4：标准 3DGS 单一高斯球内存占用占比饼图 (占位，待替换)}
-    % \includegraphics[width=0.75\textwidth]{figures/chapter4/memory_footprint.pdf}
+    \includegraphics[width=0.75\textwidth]{figures/chap4/fig_4_4_memory_pie.pdf}
     \caption{单高斯球内存占用分布：高维球谐函数（SH）系数占据超过 81\% 的总存储空间}
     \label{fig:memory_footprint}
 \end{figure}
@@ -256,10 +261,10 @@ $$\mathcal{I}_i = \lambda_1 \cdot \overline{\omega}_i + \lambda_2 \cdot \sigma(\
 这意味着每个高斯球原先需要 180 Bytes（$45 \times 4$）来存储的高阶特征，现在仅需存储一个 12-bit 或 16-bit（2 Bytes）的整型索引。
 仅此一项操作，就将外观属性的存储体积压缩了近 90倍。
 
+%图4-5 高维属性矢量量化机制：连续特征空间至离散码本索引的降维映射
 \begin{figure}[htbp]
     \centering
-    \framebox[\textwidth]{\rule{0pt}{160pt} 图 4-5：面向高维球谐函数（SH）系数的矢量量化与码本映射架构 (占位，待替换)}
-    % \includegraphics[width=0.95\textwidth]{figures/chapter4/vq_sh_mapping.pdf}
+    \includegraphics[width=0.95\textwidth]{figures/chap4/fig_4_5_vq_sh_mapping.pdf}
     \caption{高维属性矢量量化机制：连续特征空间至离散码本索引的降维映射}
     \label{fig:vq_sh_mapping}
 \end{figure}
@@ -301,10 +306,10 @@ $$\mathcal{I}_i = \lambda_1 \cdot \overline{\omega}_i + \lambda_2 \cdot \sigma(\
     \frac{\partial \mathcal{L}}{\partial \mathbf{h}_i} \approx \frac{\partial \mathcal{L}}{\partial \mathbf{c}_{\mathbf{I}_i}}
 \end{equation}
 
+%4-6基于直通估计器（STE）的量化感知微调计算流图
 \begin{figure}[htbp]
     \centering
-    \framebox[\textwidth]{\rule{0pt}{160pt} 图 4-6：基于直通估计器（STE）的量化感知微调计算流图 (占位，待替换)}
-    % \includegraphics[width=0.9\textwidth]{figures/chapter4/qat_ste_pipeline.pdf}
+    \includegraphics[width=0.9\textwidth]{figures/chap4/fig_4_6_qat_ste_pipeline.pdf}
     \caption{量化感知微调计算图：前向传播使用离散码字，反向传播透传连续梯度}
     \label{fig:qat_ste_pipeline}
 \end{figure}
@@ -371,10 +376,10 @@ $$\mathbf{\hat{h}}_i = \mathcal{C}_{sh}[k]$$
 $$s_i = \exp(\hat{s}_i \cdot \Delta_s + s_{min})$$
 $$q_i = \frac{q_i}{\|q_i\|_2}$$
 
+%基于 WebGPU Compute Shader 的端侧并行解码流水线
 \begin{figure}[htbp]
     \centering
-    \framebox[\textwidth]{\rule{0pt}{160pt} 图 4-7：基于 WebGPU Compute Shader 的端侧并行解码流水线 (占位，待替换)}
-    % \includegraphics[width=0.95\textwidth]{figures/chapter4/webgpu_decoding_pipeline.pdf}
+    \includegraphics[width=0.95\textwidth]{figures/chap4/fig_4_7_webgpu_parallel_decoding.pdf}
     \caption{硬件级并行解码架构：绕过 CPU 瓶颈，在显存内部直接将离散索引映射为连续渲染参数}
     \label{fig:webgpu_decoding_pipeline}
 \end{figure}
@@ -396,10 +401,10 @@ $$q_i = \frac{q_i}{\|q_i\|_2}$$
 随后，我们不再进行昂贵的全局排序，而是利用 WebGPU 的 `atomic` 指令，在 Compute Shader 中构建基于瓦片的局部链表（Per-Tile Linked List）。
 我们只对落入同一瓦片内部的高斯球片段进行局部深度排序（Local Depth Sorting）。
 
+%4-8适配移动端 TBDR 架构的 Tile-based 局部排序与混合策略
 \begin{figure}[htbp]
     \centering
-    \framebox[\textwidth]{\rule{0pt}{160pt} 图 4-8：适配移动端 TBDR 架构的 Tile-based 局部排序与混合策略 (占位，待替换)}
-    % \includegraphics[width=0.9\textwidth]{figures/chapter4/tbdr_optimization.pdf}
+    \includegraphics[width=0.9\textwidth]{figures/chap4/fig_4_8_tbdr_optimization.pdf}
     \caption{基于瓦片的渲染优化：将全局排序开销降维为局部缓存操作，大幅节省显存带宽}
     \label{fig:tbdr_optimization}
 \end{figure}
@@ -535,8 +540,7 @@ $$C = \sum_{j=1}^{K_{tile}} c_j \alpha_j \prod_{m=1}^{j-1}(1-\alpha_m)$$
 
 \begin{figure}[htbp]
     \centering
-    \framebox[\textwidth]{\rule{0pt}{150pt} 图 4-10：多平台端侧设备 Web 渲染帧率（FPS）对比柱状图 (占位，待替换)}
-    % \includegraphics[width=0.85\textwidth]{figures/chapter4/fps_comparison.pdf}
+    \includegraphics[width=0.85\textwidth]{figures/chap4/fig_4_10_fps_comparison.pdf}
     \caption{跨设备实时渲染性能评估：本文方法在平板与智能手机端均突破了 60 FPS 流畅标准}
     \label{fig:fps_comparison}
 \end{figure}
