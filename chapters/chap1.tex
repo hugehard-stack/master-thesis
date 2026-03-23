@@ -111,17 +111,23 @@ NeRF 创造性地利用多层感知机（MLP）将连续的三维场景隐式地
     \centering
     \caption{主流三维场景重建与渲染算法综合性能定性对比}
     \label{tab:algorithm_comparison}
-    \renewcommand{\arraystretch}{1.3}
-    \begin{tabular}{l c c c c c}
+    \renewcommand{\arraystretch}{1.4} % 稍微增加行高，防止换行后文字太挤
+    \small % 适当缩小字号，更符合学术论文对宽表格的处理
+    \setlength{\tabcolsep}{3pt} % 稍微收缩列间距，挤出更多空间
+    
+    % 使用 tabularx，设置总宽为页面宽度 \textwidth
+    % L/C/R 是自定义的自动换行且指定对齐方式的列类型
+    \begin{tabularx}{\textwidth}{l l c c >{\centering\arraybackslash}X >{\centering\arraybackslash}X}
         \toprule
-        \textbf{算法类型} & \textbf{代表性工作} & \textbf{渲染帧率 (FPS)} & \textbf{显存占用} & \textbf{反光材质鲁棒性} & \textbf{几何表面提取} \\
+        \textbf{算法类型} & \textbf{代表性工作} & \textbf{渲染帧率} & \textbf{显存占用} & \textbf{反光材质} & \textbf{几何表面} \\
+         & & \textbf{(FPS)} & & \textbf{鲁棒性} & \textbf{提取} \\
         \midrule
         传统多视角几何 & COLMAP & 无法直接渲染 & 极低 & 极差 & 差（易破损） \\
-        隐式神经辐射场 & Mip-NeRF & 极低 ($<1$ FPS) & 中等 & 较好 & 较好 \\
-        加速隐式辐射场 & Instant-NGP & 中等 ($\sim 15$ FPS) & 中等 & 一般 & 一般 \\
-        显式高斯溅射 & 原版 3DGS & 极高 ($>100$ FPS) & 极高 (爆炸风险) & 较差 (伪影严重) & 极差 \\
+        隐式神经辐射场 & Mip-NeRF & 极低 ($<1$) & 中等 & 较好 & 较好 \\
+        加速隐式辐射场 & Instant-NGP & 中等 ($\sim 15$) & 中等 & 一般 & 一般 \\
+        显式高斯溅射 & 原版 3DGS & 极高 ($>100$) & 极高 (爆炸风险) & 较差 (伪影严重) & 极差 \\
         \bottomrule
-    \end{tabular}
+    \end{tabularx}
 \end{table}
 
 结合表 1-1 的对比分析可以看出，现有的大部分改进研究往往呈“单点突破”态势。例如，侧重于表面提取的算法（如 SuGaR）通常会牺牲一定的渲染帧率，并进一步增加优化过程的计算复杂度；而侧重于轻量化压缩的算法（如 Compact 3DGS）虽然降低了显存消耗，但在处理工业高光和弱纹理区域时，由于基元数量锐减，更容易导致视觉质量的崩塌。
