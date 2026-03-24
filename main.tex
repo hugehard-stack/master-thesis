@@ -48,22 +48,19 @@
 \author{王伊硕}
 \date{2026年1月}
 
-% ====== 公式编号：显示为（公式3.1）=====
+% ====== 公式编号：显示为（3.1）=====
 \numberwithin{equation}{chapter} % 保持 3.1, 3.2 逻辑
 
-% 定义华师专属公式标签格式：[字体类型]{左括号内容}{右括号内容}
-\newtagform{ccnustyle}[\text]{（公式}{）}
+% 公式标签格式
+\newtagform{ccnustyle}{（}{）}
 
 % 启用这个格式
 \usetagform{ccnustyle}
 
-% 智能引用设置（配合 cleveref 使用，正文写 \cref 自动补“公式”二字）
-\crefname{equation}{公式}{公式}
-
-
+% 如果不想 \cref 自动显示“公式”，就不要设置 equation 的名字
+% \crefname{equation}{公式}{公式}
 
 \begin{document}
-
 
 % ====== 封面 ======
 \maketitle
