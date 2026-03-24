@@ -55,9 +55,8 @@
 % 预留图 3-1 的位置
 \begin{figure}[htbp]
     \centering
-    % \includegraphics[width=0.9\linewidth]{figures/chap3/failure_cases_comparison.pdf}
-    \vspace{6cm} % 在没有真实图片前，用空白占位 6cm 高度
-    \caption{传统 3DGS 在类工业场景高反光与弱纹理表面的失效现象对比图。左侧展示了金属表面的浮空伪影，右侧展示了纯色背景区域的几何表面塌陷。}
+    \includegraphics[width=\linewidth,height=0.75\textheight,keepaspectratio]{figures/chap3/fig_3_1_failure_cases_comparison.png}
+    \caption{传统 3DGS 在高反光区域中的典型失效现象。原始 3DGS 在镜面或强反射表面附近容易产生外观失真、结构模糊及伪影，难以准确恢复反射区域的真实几何与纹理。}
     \label{fig:failure_cases}
 \end{figure}
 
@@ -74,15 +73,16 @@
 % 预留图 3-2 的位置
 \begin{figure}[htbp]
     \centering
-    % \includegraphics[width=0.95\linewidth]{figures/chap3/overall_pipeline.pdf}
-    \vspace{8cm} % 核心管线图占位较大，预留 8cm
+    \includegraphics[width=0.95\linewidth]{figures/chap3/fig_3_2_Pipeline.pdf}
+    %\vspace{8cm} % 核心管线图占位较大，预留 8cm
     \caption{面向类工业场景的多模态自适应几何约束重建算法总流程图。算法管线主要涵盖多模态空间配准、自适应掩膜生成以及联合法向正则化的动态参数更新三大核心模块。}
     \label{fig:overall_pipeline}
 \end{figure}
 
 由图 \ref{fig:overall_pipeline} 可知，
 本算法的输入流被拓展为双分支结构：
-除了常规的弱纹理/高反光多视角 RGB 图像序列外，并行引入了通过 LiDAR 扫描设备获取的场景点云或深度先验数据。
+除了常规的弱纹理/高反光多视角 RGB 图像序列外，
+并行引入了通过 LiDAR 扫描设备获取的场景点云或深度先验数据。
 整个管线按照数据流向与处理逻辑，可划分为以下三个紧密衔接的核心模块：
 
 \begin{enumerate}
