@@ -16,6 +16,8 @@
 \usepackage[table]{xcolor}
 \usepackage{xparse}
 \usepackage{tabularx}
+\usepackage{xeCJK}
+\xeCJKsetup{AutoFakeBold=true}
 
 \NewDocumentCommand{\safeimage}{O{\linewidth} m}{
   \IfFileExists{#2}{
@@ -29,6 +31,14 @@
       \end{minipage}
     }
   }
+}
+
+\ctexset{
+    chapter = {
+        beforeskip = {0pt}, % 调小标题上方间距
+        afterskip = {20pt}, % 调小标题下方间距
+        fixskip = true      % 强制间距生效，不受其他行间距设置干扰
+    }
 }
 
 
