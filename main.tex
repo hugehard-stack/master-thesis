@@ -78,7 +78,7 @@
 % ====== 页面设置（你后面可按学校要求改）======
 \geometry{a4paper,left=3cm,right=2.5cm,top=2.8cm,bottom=2.8cm}
 
-% ====== 超链接样式（不想要彩色可改）======
+% ====== 超链接样式 ======
 \hypersetup{
   colorlinks=true,
   linkcolor=black,
@@ -108,27 +108,35 @@
 % ====== 封面 ======
 \maketitle
 
+% ====== 前置部分：罗马页码 ======
 \clearpage
-\pagenumbering{Roman} % 从这里开始是 I, II, III...
-\pagestyle{plain}      % 确保从这里开始，页码都在底部居中
+\pagenumbering{Roman}
+\pagestyle{plain}
 
-% ====== 摘要 ======
+% ====== 中文摘要 ======
 \include{chapters/abstract}
+
+% ====== 英文摘要 ======
 \include{chapters/abstract_en}
 
-% ====== 2. 目录部分（核心：取消页码） ======
+% ====== 目录：不显示页码 ======
 \clearpage
-\pagestyle{empty}      % 核心命令：设置接下来的页面不显示页码
-\addtocontents{toc}{\protect\thispagestyle{empty}} 
+\begingroup
+  \pagestyle{empty}
+  % 核心改进：临时让 \thispagestyle 失效，防止目录第一页被强制加上页码
+  \renewcommand{\thispagestyle}[1]{} 
+  
+  \let\cleardoublepage\clearpage
+  \tableofcontents
+  
+  % 关键：必须在 \endgroup 前使用 \clearpage，确保目录最后一页排版完后再恢复原本的样式
+  \clearpage
+\endgroup
 
-% ====== 前置部分 ======
-\tableofcontents
-
-
-% ====== 正文部分 ======
+% ====== 正文：阿拉伯页码 ======
 \clearpage
 \pagenumbering{arabic}
-\pagestyle{plain}      % 恢复页码显示样式（底部居中）
+\pagestyle{plain}
 
 \include{chapters/chap1}
 \include{chapters/chap2}
@@ -137,8 +145,7 @@
 \include{chapters/chap5}
 \include{chapters/chap6}
 
-% ====== 参考文献（你后面再补也行）======
-% 如果你暂时不想弄参考文献，把下面两行先注释掉即可
+% ====== 参考文献 ======
 \bibliographystyle{plain}
 \bibliography{refs}
 
