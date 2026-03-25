@@ -18,6 +18,14 @@
 \usepackage{tabularx}
 \usepackage{xeCJK}
 \xeCJKsetup{AutoFakeBold=true}
+\usepackage[titles]{tocloft} % 使用 titles 选项以兼容 ctex 的标题样式
+
+% 给 chapter 级别（包括摘要和各章大标题）增加引导点
+\renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}
+
+% 核心：设置一级标题（摘要、Abstract、各章标题）之前的垂直间距
+% 默认通常是 1.0em 甚至更多，改为 2pt 到 5pt 会变得非常紧凑
+\setlength{\cftbeforechapskip}{3pt} 
 
 \NewDocumentCommand{\safeimage}{O{\linewidth} m}{
   \IfFileExists{#2}{
@@ -33,13 +41,38 @@
   }
 }
 
+% ====== 级别标题样式全局设置 ======
 \ctexset{
     chapter = {
-        beforeskip = {0pt}, % 调小标题上方间距
-        afterskip = {20pt}, % 调小标题下方间距
-        fixskip = true      % 强制间距生效，不受其他行间距设置干扰
+        format = {\centering\heiti\zihao{3}\bfseries}, % 一级标题：三号黑体加粗居中
+        beforeskip = {1\baselineskip}, % 段前1行
+        afterskip = {1\baselineskip},  % 段后1行
+        fixskip = true                 % 强制间距生效
+    },
+    section = {
+        format = {\heiti\zihao{4}\bfseries}, % 二级标题：四号黑体加粗
+        beforeskip = {0.5\baselineskip},     % 段前0.5行
+        afterskip = {0.5\baselineskip},      % 段后0.5行
+        fixskip = true
+    },
+    subsection = {
+        format = {\heiti\zihao{-4}\bfseries}, % 三级标题：小四黑体加粗
+        beforeskip = {0.3\baselineskip},      % 段前0.3行
+        afterskip = {0.3\baselineskip},       % 段后0.3行
+        fixskip = true
+    },
+    subsubsection = {
+        % 四级标题：缩进正文样式（2em）、加粗、1.25倍行距
+        format = {\heiti\zihao{-4}\bfseries}, 
+        indent = {2em},                        % 首行缩进两个字符
+        beforeskip = {0pt},                    % 四级标题通常紧跟正文
+        afterskip = {0pt},
+        % 这里处理1.25倍行距：可以使用 \setstretch{1.25} 在具体章节内局部调整
     }
 }
+
+% 设置全局正文行距（通常学校要求是1.25或1.5倍，这里设为1.25）
+\setstretch{1.25}
 
 
 % ====== 页面设置（你后面可按学校要求改）======
@@ -48,7 +81,7 @@
 % ====== 超链接样式（不想要彩色可改）======
 \hypersetup{
   colorlinks=true,
-  linkcolor=blue,
+  linkcolor=black,
   urlcolor=blue,
   citecolor=blue
 }
@@ -75,19 +108,27 @@
 % ====== 封面 ======
 \maketitle
 
+\clearpage
+\pagenumbering{Roman} % 从这里开始是 I, II, III...
+\pagestyle{plain}      % 确保从这里开始，页码都在底部居中
+
 % ====== 摘要 ======
 \include{chapters/abstract}
 \include{chapters/abstract_en}
 
+% ====== 2. 目录部分（核心：取消页码） ======
+\clearpage
+\pagestyle{empty}      % 核心命令：设置接下来的页面不显示页码
+\addtocontents{toc}{\protect\thispagestyle{empty}} 
+
 % ====== 前置部分 ======
-\pagenumbering{roman}
 \tableofcontents
-%\listoffigures
-%\listoftables
+
 
 % ====== 正文部分 ======
 \clearpage
 \pagenumbering{arabic}
+\pagestyle{plain}      % 恢复页码显示样式（底部居中）
 
 \include{chapters/chap1}
 \include{chapters/chap2}
