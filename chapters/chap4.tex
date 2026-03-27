@@ -406,6 +406,35 @@
 本架构的核心突破在于：坚决禁止在 CPU 端进行任何反量化计算。
 我们充分利用 WebGPU 提供的计算着色器（Compute Shader），将数据解压过程完全下放至 GPU 显存内部进行硬件级并行处理。
 
+\begin{table}[htbp]
+    \centering
+    \caption{不同方法在多场景下的重建质量与模型存储开销对比}
+    \label{tab:qualitative_comparison_mem_psnr}
+    \setlength{\tabcolsep}{6pt}
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{c|cc|cc|cc}
+        \toprule
+        \multirow{2}{*}{Method} 
+        & \multicolumn{2}{c|}{Scene A} 
+        & \multicolumn{2}{c|}{Scene B} 
+        & \multicolumn{2}{c}{Scene C} \\
+        \cline{2-7}
+        & PSNR$\uparrow$ & Mem (MB)$\downarrow$
+        & PSNR$\uparrow$ & Mem (MB)$\downarrow$
+        & PSNR$\uparrow$ & Mem (MB)$\downarrow$ \\
+        \midrule
+        3D-GS 
+        & 24.89 & 1606 
+        & 28.94 & 263 
+        & 33.32 & 53 \\
+        Ours 
+        & \textbf{27.01} & \textbf{203 (7.9$\times\downarrow$)} 
+        & \textbf{29.24} & \textbf{69 (3.8$\times\downarrow$)} 
+        & \textbf{33.68} & \textbf{14 (3.8$\times\downarrow$)} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
 当高维属性的索引数组 $\mathbf{I}_{sh}$ 和全局码本 $\mathcal{C}_{sh}$ 被上传至显存后，我们在每帧渲染的光栅化（Rasterization）前置阶段，派发（Dispatch）一个解码计算流水线。
 对于空间中的任意高斯球 $i$，Compute Shader 会根据其携带的索引 $k = \mathbf{I}_{sh}[i]$，以 $O(1)$ 的时间复杂度从显存的码本缓冲区中直接寻址并重构出高阶 SH 浮点系数矩阵 $\mathbf{\hat{h}}_i$：
 
@@ -487,7 +516,7 @@
 
 \textbf{数据集选取：} 由于工业级重型车间数据往往涉及企业机密，本章采用第三章构建的“真实机房孪生多模态数据集（Smart-Room）”。该数据集基于 SHARE SLAM S20 设备采集，机房场景中大量的显示器反光与金属外壳，能极大程度地检验轻量化算法在大幅剔除点云后，对复杂高频光照的保持能力。此外，为了验证算法的普适性，实验还引入了 Mip-NeRF 360 \cite{barron2022mipnerf360} 公共数据集中的室内场景（如 \textit{Room} 和 \textit{Counter}）作为基准参考。
 
-% 插入表 4-2：主实验定量结果对比表
+% 插入表 ：主实验定量结果对比表
 \begin{table}[htbp]
     \centering
     \caption{多场景下不同轻量化算法的定量评估结果对比}
