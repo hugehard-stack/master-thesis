@@ -448,7 +448,7 @@ $$C = \sum_{j=1}^{K_{tile}} c_j \alpha_j \prod_{m=1}^{j-1}(1-\alpha_m)$$
     \item \textbf{渲染性能指标：} 在不同终端设备上的实时渲染帧率（Frames Per Second, FPS）。
 \end{enumerate}
 
-在对比基线（Baselines）方面，除了与\textbf{原始 3DGS} \cite{kerbl20233d} 进行直接对比外，
+在对比基线（Baselines）方面，除了与原始 3DGS进行直接对比外，
 本文还选取了目前学术界最新的两项 3DGS 压缩前沿工作作为对比对象：基于网格下采样的 \textbf{Compact 3DGS} \cite{lee2023compact} 以及基于知识蒸馏与剪枝的 \textbf{LightGaussian} \cite{fan2023lightgaussian}。
 
 \subsection{定量与定性对比分析}
@@ -486,6 +486,13 @@ $$C = \sum_{j=1}^{K_{tile}} c_j \alpha_j \prod_{m=1}^{j-1}(1-\alpha_m)$$
 如表 \ref{tab:quantitative_results} 所示，与原始 3DGS 相比，本文方法在保持图像保真度（PSNR 仅下降极微小的 0.22 dB，LPIPS 几乎一致）的前提下，将机房模型的存储体积从 1GB 以上惊人地压缩至不足 50MB（压缩比超 21 倍），运行时显存占用降低了近 90\%。
 对比 LightGaussian，虽然两者的保留点云数量相近，但由于本文在 4.3 节引入了针对球谐函数的深度矢量量化（VQ）与混合精度压缩，模型体积实现了更具断层优势的缩减。
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/chap4/fig4_tradeoff_curve.pdf}
+    \caption{不同轻量化方法在多场景下的模型体积--重建质量权衡关系}
+    \label{fig:tradeoff_curve}
+\end{figure}
+
 
 \begin{figure}[htbp]
     \centering
@@ -495,7 +502,7 @@ $$C = \sum_{j=1}^{K_{tile}} c_j \alpha_j \prod_{m=1}^{j-1}(1-\alpha_m)$$
     \label{fig:qualitative_comparison}
 \end{figure}
 
-\textbf{定性结果分析：} 图 \ref{fig:qualitative_comparison} 选取了机房场景中极具挑战性的“显示器屏幕反光”与“金属机柜交界处”进行局部放大对比。
+\textbf{定性结果分析：} 图 \ref{fig:qualitative_comparison} 选取了机房场景中的“显示器屏幕反光”与“金属机柜交界处”进行局部放大对比。
 可以看出，Compact 3DGS 由于过度依赖网格下采样，在几何结构复杂的机柜边缘出现了明显的“模糊”与“悬浮噪点”。
 而本文方法得益于 4.2 节“冻结几何、优化外观”的量化感知微调（QAT）策略，
 不仅成功抑制了因参数截断导致的色彩断层（Color Banding），
