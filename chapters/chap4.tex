@@ -77,6 +77,14 @@
     \item \textbf{分裂（Split）：} 当高斯球体积过大且位置梯度较大时，通常意味着该高斯球试图覆盖过于复杂的几何细节（如跨越了机柜的边缘），算法会将其分裂为两个体积更小的高斯球，其缩放比例通常初始化为原来的 $1/1.6$。
 \end{enumerate}
 
+%图 标准 3DGS 单一高斯球内存占用占比饼图
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/chap4/fig_4_4_memory_pie.pdf}
+    \caption{单高斯球内存占用分布：高维球谐函数（SH）系数占据超过 81\% 的总存储空间}
+    \label{fig:memory_footprint}
+\end{figure}
+
 尽管 ADC 机制极大地提升了重建的精细度，
 但在机房这种存在大面积非朗伯体（Non-Lambertian）高反光表面（如显示器屏幕）和严重遮挡的场景中，梯度优化往往会陷入局部最优。
 为了拟合屏幕反光或者遮挡边界的复杂光路，优化器会在墙壁内部、机柜背面等“不可见区域”疯狂地触发分裂和克隆，生成数以百万计的“幽灵高斯”（Ghost Gaussians）。
@@ -144,6 +152,15 @@
 其中 $V_{median}$ 为当前场景中所有高斯球体积的中位数，$\sigma_V$ 为体积分布的标准差。
 该惩罚项使得体积过大或过小的高斯球在最终评分中获得较低的权重。
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{figures/chap4/fig4_view_adaptive_gaussian_attributes.pdf}
+    \caption{视角自适应高斯属性可视化示意图}
+    \label{fig:view_adaptive_gaussian_attributes}
+\end{figure}
+
+
+
 \subsubsection{综合重要性评分函数}
 
 综合上述对有效渲染贡献度 $\overline{\omega}_i$、固有不透明度 $\alpha_i$ 以及几何尺度惩罚 $\mathcal{P}_{vol}(i)$ 的分析，
@@ -169,6 +186,8 @@
 具体而言，算法寻找一个阈值 $\tau$，使得被划分为“保留组”和“剔除组”的两类高斯球，其重要性得分的类间方差最大化。
 在实际工程实现中，为了保证重建质量的绝对安全下限，我们会在 Otsu 计算结果的基础上叠加一个最大剔除比例限制（例如 $\eta_{max} = 60\%$）。
 即，如果自适应阈值导致需要剔除的点数超过了总点数的 60\%，则强制调低阈值以保全几何结构。
+
+
 
 \begin{figure}[htbp]
     \centering
@@ -198,13 +217,13 @@
     \item 使用远低于正常训练阶段的学习率（例如设定为原始学习率的 $10^{-2}$ 量级），利用原始视角的图像继续进行 2000 至 3000 次迭代（Iterations）的渲染损失（Loss）反向传播。
 \end{enumerate}
 
-\begin{figure}[htbp]
-    \centering
-    \framebox[\textwidth]{\rule{0pt}{150pt} 图 4-3：机房场景剔除前后高斯点云的空间分布与渲染质量对比局部放大图 (占位，待替换)}
-    % \includegraphics[width=0.95\textwidth]{figures/chapter4/pruning_comparison.png}
-    \caption{机房场景几何提纯效果（左：原始致密点云；中：剔除后的提纯点云；右：微调恢复后的渲染视口截图）}
-    \label{fig:pruning_comparison}
-\end{figure}
+% \begin{figure}[htbp]
+%     \centering
+%     \framebox[\textwidth]{\rule{0pt}{150pt} 图 4-3：机房场景剔除前后高斯点云的空间分布与渲染质量对比局部放大图 (占位，待替换)}
+%     % \includegraphics[width=0.95\textwidth]{figures/chapter4/pruning_comparison.png}
+%     \caption{机房场景几何提纯效果（左：原始致密点云；中：剔除后的提纯点云；右：微调恢复后的渲染视口截图）}
+%     \label{fig:pruning_comparison}
+% \end{figure}
 
 经过微调恢复后，
 保留下来的核心高斯球能够通过自适应调整自身的颜色和不透明度，
@@ -213,6 +232,7 @@
 能够在保证机房场景高反光质感与几何锐度（PSNR 和 SSIM 指标几乎无降级）的苛刻前提下，稳定剔除 40\% 到 55\% 的冗余点云数据。
 这不仅从根源上缩减了模型体积，
 更为第 4.3 节所述的面向保留核心点云的高维属性量化压缩，提供了一个极其干净、紧凑的数据底座。
+
 
 \section{面向高维属性的高斯量化压缩算法}
 \label{sec:attribute_quantization}
@@ -241,13 +261,7 @@
 为了拟合复杂的高频光场反射，原始模型通常默认采用三阶（Degree $D=3$）的 SH 系数。对于 RGB 三个颜色通道，三阶 SH 系数的总维度为 $3 \times (D+1)^2 = 48$ 维。
 因此，单高斯球的 SH 系数将占用惊人的 $48 \times 4 = 192$ Bytes。
 
-%图 4-4：标准 3DGS 单一高斯球内存占用占比饼图
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.75\textwidth]{figures/chap4/fig_4_4_memory_pie.pdf}
-    \caption{单高斯球内存占用分布：高维球谐函数（SH）系数占据超过 81\% 的总存储空间}
-    \label{fig:memory_footprint}
-\end{figure}
+
 
 在单个高斯球总计 236 Bytes 的内存开销中，高维的 SH 系数占据了高达 81.3\% 的比重。
 在机房这种具有高度重复性材质（例如成排的同型号服务器机柜、统一规格的地板纹理与天花板灯带）的场景中，
@@ -569,7 +583,7 @@
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.95\textwidth]{figures/chap4/qualitative_comparison.png}
-    \caption{渲染画质定性对比}
+    \caption{渲染画质对比}
     \label{fig:qualitative_comparison}
 \end{figure}
 
@@ -618,12 +632,6 @@
 
 数据证明，基于多维度重要性评估的剔除策略精准识别了隐藏在机柜内部与墙体边缘的“幽灵点”，在第三章几何修复的基础上，进一步削减了约 61.9\% 的几何冗余（点云数从 5.12M 降至 1.95M），但仅损失了微小的 0.29 dB 的 PSNR。而在点云提纯的基础上，矢量量化（VQ）将庞大的 SH 特征矩阵降维为离散字典索引，完成了绝大部分的体积压缩（存储体积从 325.5 MB 极限压缩至 48.2 MB）。两者相辅相成，缺一不可。
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.82\textwidth]{figures/chap4/fig4_view_adaptive_gaussian_attributes.pdf}
-    \caption{视角自适应高斯属性可视化示意图}
-    \label{fig:view_adaptive_gaussian_attributes}
-\end{figure}
 
 \subsection{端侧Web渲染部署与帧率评估}
 \label{subsec:edge_deployment_fps}
