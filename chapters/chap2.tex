@@ -242,6 +242,20 @@ $\alpha_i'$ 是考虑了高斯空间衰减后的二维投影不透明度：$\alp
     \item \textbf{裁剪（Prune）：} 周期性地剔除不透明度 $\alpha$ 低于设定阈值（如 $\epsilon = 0.005$）的透明高斯体，以及在世界空间中体积过度膨胀的高斯体，以控制显存占用并减少渲染伪影。
 \end{itemize}
 
+针对原始 3DGS 在高斯生长判据上的局限性，已有研究开始尝试从密度控制机制本身进行改进。
+其中，一类代表性思路是将不同视角下高斯覆盖的像素数量引入梯度统计过程，对原有的 split / clone 判据进行像素感知加权，从而增强大尺度高斯在关键区域的细化能力。
+其基本思想如图~\ref{fig:pixelgs_pipeline} 所示。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.88\textwidth]{figures/chap2/pixelgs_thesis_style.pdf}
+    \caption{基于像素感知梯度的 3DGS 密度控制改进示意图}
+    \label{fig:pixelgs_pipeline}
+\end{figure}
+
+该类方法表明，对高斯体的分裂与克隆判据进行重新设计，是提升 3DGS 局部细节恢复能力的重要方向。
+然而，这类改进总体上仍主要围绕图像域梯度驱动展开，对于工业场景中由弱纹理、镜面反射和初始化稀疏共同导致的几何结构崩溃问题，仍缺乏显式而稳定的外部几何先验约束。
+
 \textbf{工业场景中的优化崩溃：}
 然而，这套自适应生长机制在工业场景中存在致命缺陷。
 3DGS 的初始高斯球位置极度依赖于传统 SfM（如 COLMAP）输出的稀疏点云。
