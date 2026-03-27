@@ -31,7 +31,7 @@
     \label{fig:edge_deployment_bottleneck}
 \end{figure}
 
-如图 \ref{fig:edge_deployment_bottleneck} 所示，
+
 在算力受限的前端设备上直接加载与解析如此庞大的原始 3DGS 模型，
 不仅会导致极其漫长的网络传输延迟与系统冷启动耗时，还会瞬间打满端侧设备的可用显存，引发程序崩溃（Out of Memory, OOM）或产生不可接受的渲染掉帧与卡顿。
 近年来，尽管学术界陆续涌现出了一些针对 3DGS 的轻量化压缩方案，例如通过网格引导进行下采样的 Compact 3DGS \cite{lee2023compact}，以及引入剪枝与知识蒸馏的 LightGaussian \cite{fan2023lightgaussian}。
@@ -94,19 +94,34 @@
 
 3DGS 的渲染管线本质上是对传统体积渲染（Volume Rendering）\cite{mildenhall2021nerf} 的离散化近似。
 对于相机发出的任意一条射线 $\mathbf{r}$，其最终在屏幕像素上呈现的颜色 $C(\mathbf{r})$ 由沿射线排序的 $N$ 个高斯球混合而成：
-$$C(\mathbf{r}) = \sum_{i=1}^{N} c_i \alpha_i T_i$$
+
+\begin{equation}
+    C(\mathbf{r}) = \sum_{i=1}^{N} c_i \alpha_i T_i
+\end{equation}
+
 其中，$c_i$ 为第 $i$ 个高斯球的颜色，$\alpha_i$ 为其在该射线视角下的计算不透明度。
 关键参数 $T_i$ 被称为透射率（Transmittance），表示光线在穿过前 $i-1$ 个高斯球后剩余的能量比例，其计算公式为：
-$$T_i = \prod_{j=1}^{i-1}(1-\alpha_j)$$
+
+\begin{equation}‘
+    ’T_i = \prod_{j=1}^{i-1}(1-\alpha_j)
+\end{equation}
 
 从上述公式可以推导出：一个高斯球即便拥有较高的固有不透明度 $\alpha_i$，
 如果它始终被排列在前面的高斯球遮挡（即前序的 $\alpha_j$ 接近 1，
 导致 $T_i$ 趋近于 0），那么它对最终画面颜色 $C(\mathbf{r})$ 的实际贡献量依然微乎其微。
 因此，我们定义高斯球 $i$ 在特定视图 $v$ 下的有效贡献度 $\omega_{i,v}$ 为其在所有穿过该球的射线中的最大累积权重：
-$$\omega_{i,v} = \max_{\mathbf{r} \in \mathcal{R}_v} (\alpha_{i,\mathbf{r}} \cdot T_{i,\mathbf{r}})$$
+
+\begin{equation}
+    \omega_{i,v} = \max_{\mathbf{r} \in \mathcal{R}_v} (\alpha_{i,\mathbf{r}} \cdot T_{i,\mathbf{r}})
+\end{equation}
+
 考虑到工业机房通常需要多视角的漫游，
 我们将该指标扩展至整个训练视图集合 $\mathcal{V}$，得到全局平均视图可见性权重 $\overline{\omega}_i$：
-$$\overline{\omega}_i = \frac{1}{|\mathcal{V}|} \sum_{v \in \mathcal{V}} \omega_{i,v}$$
+
+\begin{equation}
+    \overline{\omega}_i = \frac{1}{|\mathcal{V}|} \sum_{v \in \mathcal{V}} \omega_{i,v}
+\end{equation}
+
 该权重 $\overline{\omega}_i$ 能够精准且严格地筛选出那些深埋于物体内部、处于视场盲区或被完全遮挡的冗余几何体。
 
 \subsubsection{几何尺度与空间分布惩罚}
@@ -115,9 +130,17 @@ $$\overline{\omega}_i = \frac{1}{|\mathcal{V}|} \sum_{v \in \mathcal{V}} \omega_
 在机房场景的重建中，我们观察到两类极端的无用高斯球：第一类是极度细小的“粉尘点”，它们通常是优化过程中的数值噪声；
 第二类是体积畸大且呈现极度扁平状（即各向异性极强）的“背景球”，它们试图用极低的透明度覆盖大面积的纯色背景。
 设高斯球 $i$ 的三维协方差矩阵对应的三个主轴缩放因子分别为 $s_{i,1}, s_{i,2}, s_{i,3}$，我们定义其固有空间体积 $V_i$ 为：
-$$V_i = s_{i,1} \cdot s_{i,2} \cdot s_{i,3}$$
+
+\begin{equation}
+    V_i = s_{i,1} \cdot s_{i,2} \cdot s_{i,3}
+\end{equation}
+
 为了惩罚这些极端尺度的几何体，我们引入了基于高斯体积的正则化惩罚项 $\mathcal{P}_{vol}(i)$：
-$$\mathcal{P}_{vol}(i) = \exp\left(-\frac{(V_i - V_{median})^2}{2\sigma_V^2}\right)$$
+
+\begin{equation}
+    \mathcal{P}_{vol}(i) = \exp\left(-\frac{(V_i - V_{median})^2}{2\sigma_V^2}\right)
+\end{equation}
+
 其中 $V_{median}$ 为当前场景中所有高斯球体积的中位数，$\sigma_V$ 为体积分布的标准差。
 该惩罚项使得体积过大或过小的高斯球在最终评分中获得较低的权重。
 
@@ -125,7 +148,11 @@ $$\mathcal{P}_{vol}(i) = \exp\left(-\frac{(V_i - V_{median})^2}{2\sigma_V^2}\rig
 
 综合上述对有效渲染贡献度 $\overline{\omega}_i$、固有不透明度 $\alpha_i$ 以及几何尺度惩罚 $\mathcal{P}_{vol}(i)$ 的分析，
 我们最终构建了面向多维特征的高斯综合重要性评分函数 $\mathcal{I}_i$：
-$$\mathcal{I}_i = \lambda_1 \cdot \overline{\omega}_i + \lambda_2 \cdot \sigma(\alpha_i) \cdot \mathcal{P}_{vol}(i)$$
+
+\begin{equation}
+    \mathcal{I}_i = \lambda_1 \cdot \overline{\omega}_i + \lambda_2 \cdot \sigma(\alpha_i) \cdot \mathcal{P}_{vol}(i)
+\end{equation}
+
 式中，$\sigma(\cdot)$ 为 Sigmoid 激活函数，用于将基础不透明度非线性映射至 $(0, 1)$ 区间；$\lambda_1$ 与 $\lambda_2$ 为平衡渲染权重与几何特征的超参数（在本文的机房场景实验中，依据经验通常设定 $\lambda_1 = 0.7, \lambda_2 = 0.3$）。
 通过计算每一个高斯体的 $\mathcal{I}_i$ 评分，我们为后续的自动化剪枝提供了坚实的数学依据。
 
@@ -150,7 +177,7 @@ $$\mathcal{I}_i = \lambda_1 \cdot \overline{\omega}_i + \lambda_2 \cdot \sigma(\
     \label{fig:pruning_workflow}
 \end{figure}
 
-如图 \ref{fig:pruning_workflow} 所示，执行阈值过滤后，
+在执行阈值过滤后，
 大量判定为 $\mathcal{I}_i < \tau_{prune}$ 的高斯球将被从 GPU 显存和数据结构中彻底抹除。
 这一步骤直接实现了点云数据的高效提纯（Purification）。
 
@@ -179,7 +206,7 @@ $$\mathcal{I}_i = \lambda_1 \cdot \overline{\omega}_i + \lambda_2 \cdot \sigma(\
     \label{fig:pruning_comparison}
 \end{figure}
 
-如图 \ref{fig:pruning_comparison} 的实验结果所示，经过微调恢复后，
+经过微调恢复后，
 保留下来的核心高斯球能够通过自适应调整自身的颜色和不透明度，
 完美地填补被剔除高斯球留下的微小视觉空缺。
 整体而言，该基于重要性评估的剔除策略，
@@ -222,7 +249,7 @@ $$\mathcal{I}_i = \lambda_1 \cdot \overline{\omega}_i + \lambda_2 \cdot \sigma(\
     \label{fig:memory_footprint}
 \end{figure}
 
-如图 \ref{fig:memory_footprint} 所示，在单个高斯球总计 236 Bytes 的内存开销中，高维的 SH 系数占据了高达 81.3\% 的比重。
+在单个高斯球总计 236 Bytes 的内存开销中，高维的 SH 系数占据了高达 81.3\% 的比重。
 在机房这种具有高度重复性材质（例如成排的同型号服务器机柜、统一规格的地板纹理与天花板灯带）的场景中，
 不同高斯球之间实际上共享着极其相似的光照反射模式和材质属性。
 这意味着全量存储每一个高斯球的 FP32 精度 SH 系数存在着极大的信息冗余。
@@ -347,6 +374,13 @@ $$\mathcal{I}_i = \lambda_1 \cdot \overline{\omega}_i + \lambda_2 \cdot \sigma(\
 
 为了最大化网络传输效率，我们摒弃了 3DGS 原生的基于 PLY（Polygon File Format）格式的松散数据结构，重新设计了一种面向 Web 流式加载的紧凑型二进制序列化格式（Customized Binary Splat, CBS）。
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.88\textwidth]{figures/chap4/growing_operation_schematic.pdf}
+    \caption{基于梯度聚合的多尺度高斯生长机制示意图}
+    \label{fig:growing_operation_schematic}
+\end{figure}
+
 在 CBS 格式中，数据被严格划分为“全局码本头（Global Codebook Header）”与“高斯载荷块（Gaussian Payload Chunks）”两部分：
 
 \begin{enumerate}
@@ -361,26 +395,37 @@ $$\mathcal{I}_i = \lambda_1 \cdot \overline{\omega}_i + \lambda_2 \cdot \sigma(\
 \subsection{基于 Compute Shader 的端侧硬件级解码}
 \label{subsec:gpu_compute_decoding}
 
+%基于 WebGPU Compute Shader 的端侧并行解码流水线
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{figures/chap4/fig_4_7_webgpu_parallel_decoding.pdf}
+    \caption{硬件级并行解码架构}
+    \label{fig:webgpu_decoding_pipeline}
+\end{figure}
+
 本架构的核心突破在于：坚决禁止在 CPU 端进行任何反量化计算。
 我们充分利用 WebGPU 提供的计算着色器（Compute Shader），将数据解压过程完全下放至 GPU 显存内部进行硬件级并行处理。
 
 当高维属性的索引数组 $\mathbf{I}_{sh}$ 和全局码本 $\mathcal{C}_{sh}$ 被上传至显存后，我们在每帧渲染的光栅化（Rasterization）前置阶段，派发（Dispatch）一个解码计算流水线。
 对于空间中的任意高斯球 $i$，Compute Shader 会根据其携带的索引 $k = \mathbf{I}_{sh}[i]$，以 $O(1)$ 的时间复杂度从显存的码本缓冲区中直接寻址并重构出高阶 SH 浮点系数矩阵 $\mathbf{\hat{h}}_i$：
-$$\mathbf{\hat{h}}_i = \mathcal{C}_{sh}[k]$$
+
+\begin{equation}
+    \mathbf{\hat{h}}_i = \mathcal{C}_{sh}[k]
+\end{equation}
+
 同理，针对 INT8 格式的对数缩放因子 $\hat{s}_i$ 与 FP16 格式的四元数 $q_i$，
 我们利用着色器内置的高效硬件指令进行指数还原与归一化计算：
-$$s_i = \exp(\hat{s}_i \cdot \Delta_s + s_{min})$$
-$$q_i = \frac{q_i}{\|q_i\|_2}$$
+\begin{equation}
+    s_i = \exp(\hat{s}_i \cdot \Delta_s + s_{min})
+\end{equation}
 
-%基于 WebGPU Compute Shader 的端侧并行解码流水线
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.95\textwidth]{figures/chap4/fig_4_7_webgpu_parallel_decoding.pdf}
-    \caption{硬件级并行解码架构：绕过 CPU 瓶颈，在显存内部直接将离散索引映射为连续渲染参数}
-    \label{fig:webgpu_decoding_pipeline}
-\end{figure}
+\begin{equation}
+    q_i = \frac{q_i}{\|q_i\|_2}
+\end{equation}
 
-如图 \ref{fig:webgpu_decoding_pipeline} 所示，这一架构避免了 CPU 计算浮点数导致的性能枯竭，
+
+
+这一架构避免了 CPU 计算浮点数导致的性能枯竭，
 同时也消除了 CPU 向 GPU 传输庞大浮点矩阵所导致的 PCIE 总线带宽阻塞。
 解码后的连续浮点数据直接驻留在 GPU 的高速片内缓存（SRAM）中，
 无缝衔接至后续的基于瓦片（Tile-based）的渲染管线。
@@ -405,8 +450,12 @@ $$q_i = \frac{q_i}{\|q_i\|_2}$$
     \label{fig:tbdr_optimization}
 \end{figure}
 
-如图 \ref{fig:tbdr_optimization} 所示，在最终的片段着色器（Fragment Shader）执行混合累加时：
-$$C = \sum_{j=1}^{K_{tile}} c_j \alpha_j \prod_{m=1}^{j-1}(1-\alpha_m)$$
+在最终的片段着色器（Fragment Shader）执行混合累加时：
+
+\begin{equation}
+    C = \sum_{j=1}^{K_{tile}} c_j \alpha_j \prod_{m=1}^{j-1}(1-\alpha_m)
+\end{equation}
+
 如果当前瓦片内累积的透射率 $T_j = \prod (1-\alpha_m)$ 已经降至视觉不可见的阈值（例如 $T_j < 0.0001$），我们将直接触发提前深度测试失败（Early Depth Rejection / Early Ray Termination）机制，放弃处理该射线上剩余的高斯球片段。
 由于机房场景中存在大量的机柜遮挡，这种 Early Termination 机制能够直接剪除超过 40\% 的无效着色计算。
 
@@ -438,6 +487,36 @@ $$C = \sum_{j=1}^{K_{tile}} c_j \alpha_j \prod_{m=1}^{j-1}(1-\alpha_m)$$
 
 \textbf{数据集选取：} 由于工业级重型车间数据往往涉及企业机密，本章采用第三章构建的“真实机房孪生多模态数据集（Smart-Room）”。该数据集基于 SHARE SLAM S20 设备采集，机房场景中大量的显示器反光与金属外壳，能极大程度地检验轻量化算法在大幅剔除点云后，对复杂高频光照的保持能力。此外，为了验证算法的普适性，实验还引入了 Mip-NeRF 360 \cite{barron2022mipnerf360} 公共数据集中的室内场景（如 \textit{Room} 和 \textit{Counter}）作为基准参考。
 
+% 插入表 4-2：主实验定量结果对比表
+\begin{table}[htbp]
+    \centering
+    \caption{多场景下不同轻量化算法的定量评估结果对比}
+    \label{tab:quantitative_results}
+    % \small % 使用了 resizebox，这里的 \small 可以视情况保留或删除
+    \renewcommand{\arraystretch}{1.2}
+    % 在 tabular 外面套上一层 resizebox
+    \resizebox{\textwidth}{!}{
+        \begin{tabular}{lcccccc}
+            \toprule
+            \textbf{算法模型} & \textbf{点云数量 (M)} & \textbf{存储体积 (MB) $\downarrow$} & \textbf{显存占用 (MB) $\downarrow$} & \textbf{PSNR $\uparrow$} & \textbf{SSIM $\uparrow$} & \textbf{LPIPS $\downarrow$} \\
+            \midrule
+            \multicolumn{7}{c}{\textit{Smart-Room (自采集机房数据集平均值)}} \\
+            \midrule
+            原始 3DGS & 6.85 & 1150.4 & 11500 & 28.31 & 0.884 & 0.118 \\
+            Compact 3DGS & 2.15 & 310.5 & 3500 & 27.15 & 0.864 & 0.154 \\
+            LightGaussian & 2.82 & 185.6 & 2800 & 30.58 & 0.902 & 0.105 \\
+            \textbf{Ours (本文第三章输出)} & 5.12 & 850.2 & 8200 & \textbf{31.64} & \textbf{0.942} & \textbf{0.065} \\
+            \textbf{Ours (经过本章终极轻量化)} & \textbf{1.95} & \textbf{48.2} & \textbf{450} & 31.20 & 0.918 & 0.088 \\
+            \midrule
+            \multicolumn{7}{c}{\textit{Mip-NeRF 360 (Room \& Counter 场景平均值)}} \\
+            \midrule
+            原始 3DGS & 3.80 & 915.2 & 7800 & 31.65 & 0.910 & 0.210 \\
+            \textbf{Ours (经过本章终极轻量化)} & \textbf{1.68} & \textbf{42.5} & \textbf{395} & \textbf{31.52} & \textbf{0.905} & \textbf{0.218} \\
+            \bottomrule
+        \end{tabular}
+    } % 结束 resizebox
+\end{table}
+
 \subsection{评价指标与对比基线}
 \label{subsec:metrics_baselines}
 
@@ -456,32 +535,14 @@ $$C = \sum_{j=1}^{K_{tile}} c_j \alpha_j \prod_{m=1}^{j-1}(1-\alpha_m)$$
 
 \textbf{定量结果分析：} 表 \ref{tab:quantitative_results} 展示了各算法在自采集机房数据集以及 Mip-NeRF 360 室内数据集上的平均表现。
 
-% 插入表 4-2：主实验定量结果对比表
-\begin{table}[htbp]
+
+
+\begin{figure}[htbp]
     \centering
-    \caption{多场景下不同轻量化算法的定量评估结果对比}
-    \label{tab:quantitative_results}
-    \resizebox{\textwidth}{!}{
-    \begin{tabular}{lcccccc}
-        \toprule
-        \textbf{算法模型} & \textbf{点云数量 (M)} & \textbf{存储体积 (MB) $\downarrow$} & \textbf{显存占用 (MB) $\downarrow$} & \textbf{PSNR $\uparrow$} & \textbf{SSIM $\uparrow$} & \textbf{LPIPS $\downarrow$} \\
-        \midrule
-        \multicolumn{7}{c}{\textit{Smart-Room (自采集机房数据集平均值)}} \\
-        \midrule
-        原始 3DGS & 6.85 & 1150.4 & 11500 & 28.31 & 0.884 & 0.118 \\
-        Compact 3DGS & 2.15 & 310.5 & 3500 & 27.15 & 0.864 & 0.154 \\
-        LightGaussian & 2.82 & 185.6 & 2800 & 30.58 & 0.902 & 0.105 \\
-        \textbf{Ours (本文第三章输出)} & 5.12 & 850.2 & 8200 & \textbf{31.64} & \textbf{0.942} & \textbf{0.065} \\
-        \textbf{Ours (经过本章终极轻量化)} & \textbf{1.95} & \textbf{48.2} & \textbf{450} & 31.20 & 0.918 & 0.088 \\
-        \midrule
-        \multicolumn{7}{c}{\textit{Mip-NeRF 360 (Room \& Counter 场景平均值)}} \\
-        \midrule
-        原始 3DGS & 3.80 & 915.2 & 7800 & 31.65 & 0.910 & 0.210 \\
-        \textbf{Ours (经过本章终极轻量化)} & \textbf{1.68} & \textbf{42.5} & \textbf{395} & \textbf{31.52} & \textbf{0.905} & \textbf{0.218} \\
-        \bottomrule
-    \end{tabular}
-    }
-\end{table}
+    \includegraphics[width=0.95\textwidth]{figures/chap4/qualitative_comparison.png}
+    \caption{渲染画质定性对比}
+    \label{fig:qualitative_comparison}
+\end{figure}
 
 如表 \ref{tab:quantitative_results} 所示，与原始 3DGS 相比，本文方法在保持图像保真度（PSNR 仅下降极微小的 0.22 dB，LPIPS 几乎一致）的前提下，将机房模型的存储体积从 1GB 以上惊人地压缩至不足 50MB（压缩比超 21 倍），运行时显存占用降低了近 90\%。
 对比 LightGaussian，虽然两者的保留点云数量相近，但由于本文在 4.3 节引入了针对球谐函数的深度矢量量化（VQ）与混合精度压缩，模型体积实现了更具断层优势的缩减。
@@ -494,15 +555,9 @@ $$C = \sum_{j=1}^{K_{tile}} c_j \alpha_j \prod_{m=1}^{j-1}(1-\alpha_m)$$
 \end{figure}
 
 
-\begin{figure}[htbp]
-    \centering
-    \framebox[\textwidth]{\rule{0pt}{180pt} 图 4-9：机房场景多视角渲染质量定性对比与误差图（Error Map）局部放大 (占位，待替换)}
-    % \includegraphics[width=0.95\textwidth]{figures/chapter4/qualitative_comparison.png}
-    \caption{渲染画质定性对比：本文方法在极致压缩下依然完好保留了显示器的高光反射与机柜锐利边缘}
-    \label{fig:qualitative_comparison}
-\end{figure}
 
-\textbf{定性结果分析：} 图 \ref{fig:qualitative_comparison} 选取了机房场景中的“显示器屏幕反光”与“金属机柜交界处”进行局部放大对比。
+
+\textbf{定性结果分析：} 图 \ref{fig:qualitative_comparison} 选取了机房场景中的“显示器屏幕反光”进行局部放大对比。
 可以看出，Compact 3DGS 由于过度依赖网格下采样，在几何结构复杂的机柜边缘出现了明显的“模糊”与“悬浮噪点”。
 而本文方法得益于 4.2 节“冻结几何、优化外观”的量化感知微调（QAT）策略，
 不仅成功抑制了因参数截断导致的色彩断层（Color Banding），
@@ -533,6 +588,13 @@ $$C = \sum_{j=1}^{K_{tile}} c_j \alpha_j \prod_{m=1}^{j-1}(1-\alpha_m)$$
 \end{table}
 
 数据证明，基于多维度重要性评估的剔除策略精准识别了隐藏在机柜内部与墙体边缘的“幽灵点”，在第三章几何修复的基础上，进一步削减了约 61.9\% 的几何冗余（点云数从 5.12M 降至 1.95M），但仅损失了微小的 0.29 dB 的 PSNR。而在点云提纯的基础上，矢量量化（VQ）将庞大的 SH 特征矩阵降维为离散字典索引，完成了绝大部分的体积压缩（存储体积从 325.5 MB 极限压缩至 48.2 MB）。两者相辅相成，缺一不可。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\textwidth]{figures/chap4/fig4_view_adaptive_gaussian_attributes.pdf}
+    \caption{视角自适应高斯属性可视化示意图}
+    \label{fig:view_adaptive_gaussian_attributes}
+\end{figure}
 
 \subsection{端侧Web渲染部署与帧率评估}
 \label{subsec:edge_deployment_fps}
