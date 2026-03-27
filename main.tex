@@ -16,17 +16,16 @@
 \usepackage[table]{xcolor}
 \usepackage{xparse}
 \usepackage{tabularx}
-\usepackage{xeCJK}
+%\usepackage{xeCJK}
+%\xeCJKsetup{AutoFakeBold=true}
+\usepackage{titletoc}
 
-\xeCJKsetup{AutoFakeBold=true}
-\usepackage[titles]{tocloft} % 使用 titles 选项以兼容 ctex 的标题样式
-
-% 给 chapter 级别（包括摘要和各章大标题）增加引导点
-\renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}
-
-% 核心：设置一级标题（摘要、Abstract、各章标题）之前的垂直间距
-% 默认通常是 1.0em 甚至更多，改为 2pt 到 5pt 会变得非常紧凑
-\setlength{\cftbeforechapskip}{3pt} 
+\titlecontents{chapter}
+  [0em]
+  {\vspace{3pt}\heiti}
+  {\thecontentslabel\quad}
+  {}
+  {\titlerule*[0.5pc]{.}\contentspage}
 
 \NewDocumentCommand{\safeimage}{O{\linewidth} m}{
   \IfFileExists{#2}{
@@ -83,8 +82,8 @@
 \hypersetup{
   colorlinks=true,
   linkcolor=black,
-  urlcolor=blue,
-  citecolor=blue
+  urlcolor=black,
+  citecolor=black
 }
 
 % ====== 论文信息 ======
