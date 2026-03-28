@@ -84,6 +84,18 @@
 然而，在机房、实验室等典型室内场景中，存在大量缺乏纹理的区域（如纯色墙壁、平整的金属机柜表面）以及复杂的设备相互遮挡关系。
 在这些区域，SfM 算法往往难以提取到足够密集且准确的特征点，导致 3DGS 的初始点云分布存在大量缺失。
 
+
+原始 3D Gaussian Splatting (3DGS) 算法虽然能够实现极其逼真的视觉效果，
+但其生成的模型通常包含海量的高斯椭球体。
+这些高斯体中，有相当一部分对最终的渲染画面几乎没有视觉贡献，却占据了大量的物理存储空间并极大地消耗了端侧设备的渲染显存与内存带宽。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{figures/chap4/fig4_opacity_based_prune.pdf}
+    \caption{基于不透明度的直接高斯剪枝局限性示意图}
+    \label{fig:opacity_pruning_limitation}
+\end{figure}
+
 为了弥补初始化点云的不足并强行拟合训练图像的细节，
 3DGS 引入了自适应密度控制（Adaptive Density Control, ADC）机制。
 在训练的特定迭代周期内，算法会计算每个高斯球在视图空间（View-space）中的二维位置梯度 $\nabla_{\mu_{2D}} L$。
