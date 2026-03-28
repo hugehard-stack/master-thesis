@@ -22,11 +22,18 @@
 融合算法的总体输入包括多视角的 RGB 图像序列、通过 COLMAP \cite{schonberger2016structure} 初始化的稀疏点云，以及由预训练单目深度估计网络（如 Depth Anything \cite{yang2024depth}）提取的多模态深度先验图。
 
 
+% \begin{figure}[htbp]
+%     \centering
+%     % \includegraphics[width=0.95\textwidth]{figures/ch5/fusion_pipeline.pdf}
+%     \caption{融合多模态几何约束与轻量化剪枝策略的改进 3DGS 总体算法流程图}
+%     \label{fig:fusion_pipeline}
+% \end{figure}
+
 \begin{figure}[htbp]
     \centering
-    % \includegraphics[width=0.95\textwidth]{figures/ch5/fusion_pipeline.pdf}
-    \caption{融合多模态几何约束与轻量化剪枝策略的改进 3DGS 总体算法流程图}
-    \label{fig:fusion_pipeline}
+    \includegraphics[width=\textwidth]{figures/chap5/fig5_dn_splatter_overview.pdf}
+    \caption{基于深度与法向先验的高斯重建优化流程示意图}
+    \label{fig:ch5_dn_splatter_overview}
 \end{figure}
 
 如图 \ref{fig:fusion_pipeline} 所示，
