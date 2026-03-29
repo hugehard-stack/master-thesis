@@ -34,7 +34,7 @@
 
 在算力受限的前端设备上直接加载与解析如此庞大的原始 3DGS 模型，
 不仅会导致极其漫长的网络传输延迟与系统冷启动耗时，还会瞬间打满端侧设备的可用显存，引发程序崩溃（Out of Memory, OOM）或产生不可接受的渲染掉帧与卡顿。
-近年来，尽管学术界陆续涌现出了一些针对 3DGS 的轻量化压缩方案，例如通过网格引导进行下采样的 Compact 3DGS \cite{lee2023compact}，以及引入剪枝与知识蒸馏的 LightGaussian \cite{fan2023lightgaussian}。
+近年来，尽管学术界陆续涌现出了一些针对 3DGS 的轻量化压缩方案，例如通过网格引导进行下采样的 Compact 3DGS \cite{lee2024compact3dgs}，以及引入剪枝与知识蒸馏的 LightGaussian \cite{fan2024lightgaussian}。
 但这些通用压缩方法在面对数字孪生机房这种包含密集设备遮挡、精细几何边缘以及第三章所述的复杂高频光影反射场景时，
 往往会因为粗暴的参数裁剪或过度的空间离散化，造成不可逆的视觉质量退化（如反光高光细节丢失、设备边缘出现明显的伪影或空洞）。
 此外，部分基于复杂熵编码机制的方法 \cite{niedermayr2023compressed} 虽然在理论上大幅降低了存储硬盘体积，
@@ -609,7 +609,7 @@
 \end{enumerate}
 
 在对比基线（Baselines）方面，除了与原始 3DGS进行直接对比外，
-本文还选取了目前学术界最新的两项 3DGS 压缩前沿工作作为对比对象：基于网格下采样的 \textbf{Compact 3DGS} \cite{lee2023compact} 以及基于知识蒸馏与剪枝的 \textbf{LightGaussian} \cite{fan2023lightgaussian}。
+本文还选取了目前学术界最新的两项 3DGS 压缩前沿工作作为对比对象：基于网格下采样的 \textbf{Compact 3DGS} \cite{lee2024compact3dgs} 以及基于知识蒸馏与剪枝的 \textbf{LightGaussian} \cite{fan2024lightgaussian}。
 
 \subsection{定量与定性对比分析}
 \label{subsec:quantitative_qualitative}
