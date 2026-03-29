@@ -307,17 +307,32 @@
 但忽略了特征维度之间的相关性，且容易破坏高频反光细节。
 为此，本章引入矢量量化（Vector Quantization, VQ）\cite{gray1984vector} 技术，通过构建全局材质码本（Codebook），将连续的高维向量空间映射为离散的索引字典。
 
+%图4-5 高维属性矢量量化机制：连续特征空间至离散码本索引的降维映射
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth,height=0.65\textheight,keepaspectratio]{figures/chap4/fig_4_5_vq_sh_mapping.pdf}
+    \caption{高维属性矢量量化机制：连续特征空间至离散码本索引的降维映射}
+    \label{fig:vq_sh_mapping}
+\end{figure}
+
+\subsection{几何特征的低秩与混合精度量化}
+\label{subsec:geometry_quantization}
+
 \subsubsection{颜色与反光特征的码本构建}
 设经过 4.2 节剪枝后保留的核心高斯点云集合大小为 $N_{core}$。
 我们将所有高斯球的特征解耦为基础颜色（Base Color，即零阶 SH 系数，主要表达漫反射）和高频残差（High-frequency Residual，即一阶至三阶 SH 系数，主要表达镜面高光）。
 对于高阶 SH 特征矩阵 $\mathbf{H} \in \mathbb{R}^{N_{core} \times 45}$，我们采用 K-Means++ 聚类算法在特征空间中寻找 $K_{sh}$ 个聚类中心，构建高阶特征码本 $\mathcal{C}_{sh} = \{ \mathbf{c}_1, \mathbf{c}_2, \dots, \mathbf{c}_{K_{sh}} \}$，其中 $\mathbf{c}_k \in \mathbb{R}^{45}$。
 此时，原先庞大的连续特征矩阵 $\mathbf{H}$ 可以被压缩为一个极度轻量的离散索引向量 $\mathbf{I}_{sh} \in \{1, 2, \dots, K_{sh}\}^{N_{core}}$。
 
+
+
+
 量化过程的核心优化目标是最小化原始特征 $\mathbf{h}_i$ 与其映射的码字 $\mathbf{c}_{\mathbf{I}_i}$ 之间的量化重构误差（Quantization Error）：
 
 \begin{equation}
     \mathcal{L}_{vq\_sh} = \sum_{i=1}^{N_{core}} \left\| \mathbf{h}_i - \mathbf{c}_{\mathbf{I}_i} \right\|_2^2
 \end{equation}
+
 
 其中映射规则满足最近邻搜索：
 
@@ -329,16 +344,6 @@
 这意味着每个高斯球原先需要 180 Bytes（$45 \times 4$）来存储的高阶特征，现在仅需存储一个 12-bit 或 16-bit（2 Bytes）的整型索引。
 仅此一项操作，就将外观属性的存储体积压缩了近 90倍。
 
-%图4-5 高维属性矢量量化机制：连续特征空间至离散码本索引的降维映射
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.9\textwidth,height=0.72\textheight,keepaspectratio]{figures/chap4/fig_4_5_vq_sh_mapping.pdf}
-    \caption{高维属性矢量量化机制：连续特征空间至离散码本索引的降维映射}
-    \label{fig:vq_sh_mapping}
-\end{figure}
-
-\subsection{几何特征的低秩与混合精度量化}
-\label{subsec:geometry_quantization}
 
 除了外观属性，决定高斯球形状的三维缩放因子 $s \in \mathbb{R}^3$ 和旋转四元数 $q \in \mathbb{R}^4$ 也存在进一步压缩的空间。
 由于几何属性对最终三维结构的保真度极其敏感，微小的量化误差可能导致机柜边缘产生明显的破损或扭曲。
@@ -433,20 +438,13 @@
     \item \textbf{高斯载荷块：} 包含经过剪枝后保留的核心高斯球集合的低位宽属性（如位置 $\mu$ 的 FP16 坐标、SH 特征的 12-bit 索引向量 $\mathbf{I}_{sh}$、INT8 编码的旋转四元数等）。为了避免长链接阻塞，我们将数十万个高斯球按空间 Morton 码（Morton Curve）进行排序与空间划分（Spatial Partitioning），切分为多个固定大小的独立二进制块（例如每块包含 10000 个高斯元）。
 \end{enumerate}
 
+
 在前端加载策略上，我们引入了基于 Web Workers 的多线程异步请求与流式解析（Progressive Streaming）机制。
 主线程负责维护渲染循环（Render Loop），而后台 Worker 线程按需下载二进制块，并利用 `ArrayBuffer` 零拷贝特性直接向 GPU 提交缓冲更新。
 这种设计使得用户在打开机房漫游页面的瞬间，即可看到场景的粗略轮廓，并随着数据块的渐进式加载，视觉细节逐渐清晰，彻底消除了传统孪生系统漫长的“白屏等待”时间。
 
 \subsection{基于 Compute Shader 的端侧硬件级解码}
 \label{subsec:gpu_compute_decoding}
-
-%基于 WebGPU Compute Shader 的端侧并行解码流水线
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.9\textwidth,height=0.72\textheight,keepaspectratio]{figures/chap4/fig_4_7_webgpu_parallel_decoding.pdf}
-    \caption{硬件级并行解码架构}
-    \label{fig:webgpu_decoding_pipeline}
-\end{figure}
 
 本架构的核心突破在于：坚决禁止在 CPU 端进行任何反量化计算。
 我们充分利用 WebGPU 提供的计算着色器（Compute Shader），将数据解压过程完全下放至 GPU 显存内部进行硬件级并行处理。
@@ -497,12 +495,19 @@
     q_i = \frac{q_i}{\|q_i\|_2}
 \end{equation}
 
-
-
 这一架构避免了 CPU 计算浮点数导致的性能枯竭，
 同时也消除了 CPU 向 GPU 传输庞大浮点矩阵所导致的 PCIE 总线带宽阻塞。
 解码后的连续浮点数据直接驻留在 GPU 的高速片内缓存（SRAM）中，
 无缝衔接至后续的基于瓦片（Tile-based）的渲染管线。
+
+%基于 WebGPU Compute Shader 的端侧并行解码流水线
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth,height=0.72\textheight,keepaspectratio]{figures/chap4/fig_4_7_webgpu_parallel_decoding.pdf}
+    \caption{硬件级并行解码架构}
+    \label{fig:webgpu_decoding_pipeline}
+\end{figure}
+
 
 \subsection{适配移动架构的 Tile-based 渲染与排序优化}
 \label{subsec:tbdr_optimization}
@@ -511,18 +516,20 @@
 在桌面端 CUDA 环境中，通常采用高度优化的基数排序（Radix Sort）算法。
 然而，在以手机和平板为代表的移动端设备上，其 GPU 多采用基于瓦片的延迟渲染（Tile-Based Deferred Rendering, TBDR）\cite{akin2014tiled} 架构，显存带宽极为珍贵，直接移植全局基数排序会导致灾难性的性能骤降。
 
+%4-8适配移动端 TBDR 架构的 Tile-based 局部排序与混合策略
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth,height=0.72\textheight,keepaspectratio]{figures/chap4/fig_4_8_tbdr_optimization.pdf}
+    \caption{基于瓦片的渲染优化}
+    \label{fig:tbdr_optimization}
+\end{figure}
+
+
 为了适配 TBDR 架构，我们对 Web 端的渲染调度策略进行了深度重构。
 首先，在顶点着色阶段（Vertex Stage），我们计算每个高斯球在当前相机视锥体（Frustum）下的二维投影包围盒，并判断其覆盖了屏幕上的哪些 $16 \times 16$ 像素瓦片（Tiles）。
 随后，我们不再进行昂贵的全局排序，而是利用 WebGPU 的 `atomic` 指令，在 Compute Shader 中构建基于瓦片的局部链表（Per-Tile Linked List）。
 我们只对落入同一瓦片内部的高斯球片段进行局部深度排序（Local Depth Sorting）。
 
-%4-8适配移动端 TBDR 架构的 Tile-based 局部排序与混合策略
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[height=0.7\textheight,keepaspectratio]{figures/chap4/fig_4_8_tbdr_optimization.pdf}
-    \caption{基于瓦片的渲染优化：将全局排序开销降维为局部缓存操作，大幅节省显存带宽}
-    \label{fig:tbdr_optimization}
-\end{figure}
 
 在最终的片段着色器（Fragment Shader）执行混合累加时：
 
