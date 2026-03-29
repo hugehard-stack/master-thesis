@@ -46,7 +46,7 @@
 在三维高斯溅射及神经辐射场等新视角合成技术兴起之前，工业领域的三维模型获取主要依赖于计算机辅助设计（CAD）建模与传统基于多视图几何（Multiple View Geometry）的三维重建技术。
 CAD 建模虽然精度极高，但主要用于产品设计阶段，难以反映设备在实际运行环境中的真实磨损、形变及光照状态，且人工建模成本高昂，无法实现场景的快速自动化构建。
 
-传统基于多视图几何的三维重建管线通常包含运动恢复结构（Structure from Motion, SfM）\cite{schonberger2016structure} 和多视图立体视觉（Multi-View Stereo, MVS）\cite{furukawa2015multi} 两个核心阶段。
+传统基于多视图几何的三维重建管线通常包含运动恢复结构（Structure from Motion, SfM）\cite{schonberger2016structure} 和多视图立体视觉（Multi-View Stereo, MVS）\cite{furukawa2010accurate} 两个核心阶段。
 SfM 算法首先通过提取图像间的二维特征点（如 SIFT、SURF 等），并进行特征匹配与极线几何约束，联合估计出相机的内外参数以及稀疏的场景点云。
 随后，MVS 算法利用已知的相机位姿，通过计算深度图或进行密集的光度一致性匹配，生成稠密的三维点云，最终通过泊松表面重建（Poisson Surface Reconstruction）等算法提取出网格模型。
 
