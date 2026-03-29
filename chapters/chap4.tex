@@ -674,11 +674,11 @@
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.85\textwidth]{figures/chap4/fig_4_10_fps_comparison.pdf}
-    \caption{跨设备实时渲染性能评估：本文方法在平板与智能手机端均突破了 60 FPS 流畅标准}
+    \caption{跨设备实时渲染性能评估}
     \label{fig:fps_comparison}
 \end{figure}
 
-如图 \ref{fig:fps_comparison} 的性能柱状图所示，未经压缩的原始 3DGS 模型在轻薄本的核显上勉强维持在 15-20 FPS（重度卡顿），而在平板与智能手机的浏览器中加载即引发显存溢出（OOM）崩溃。
+根据性能柱状图所示，未经压缩的原始 3DGS 模型在轻薄本的核显上勉强维持在 15-20 FPS（重度卡顿），而在平板与智能手机的浏览器中加载即引发显存溢出（OOM）崩溃。
 相比之下，加载本文轻量化模型后：
 \begin{itemize}
     \item \textbf{轻薄笔记本（集成显卡）：} 得益于 Compute Shader 的显存内解码管线，渲染帧率稳定在 110-120 FPS，实现了极致丝滑。
